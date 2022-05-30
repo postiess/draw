@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap');
+
+* {
+    font-family: "Open Sans", sans-serif;
+}
+
+:root {
+    --background: #28292a;
+    --white: rgb(233, 233, 233);
+    --blue: rgb(108, 170, 252);
+    --green: rgb(110, 195, 110);
+}
+
+
+
+.paint-canvas {
+    border: 1px black solid;
+    display: block;
+    margin: 1rem;
+    cursor: crosshair;
+    max-width: 600px;
+    max-height: 300px;
+  }
+
+  .color-picker {
+    margin: 1rem 1rem 0 1rem;
+  }
