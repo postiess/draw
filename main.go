@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
 )
+
+type Action func(s *Server)
 
 type ConnSet map[*websocket.Conn]struct{}
 
@@ -15,20 +18,56 @@ type Server struct {
 }
 
 type Message struct {
-	Type string `json:"type"`
+	Type string      `json:"type"`
 	Data interface{} `json:"data"`
 }
 
-func (s *Server) Handler(ws *websocket.Conn) {
+func Broadcast(message string) Action {
+	return func(s *Server) {
+		for ws := range s.conns {
+			if err := websocket.Message.Send(ws, message); err != nil {
+				fmt.Println("Can't send message")
+			}
+		}
+	}
+}
 
-	var err error
+func sendUserCount(s *Server) {
+	userMessage := &Message{
+		Type: "userCount",
+		Data: len(s.conns),
+	}
+	b, err := json.Marshal(userMessage)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	s.dispatch <- Broadcast(string(b))
+}
+
+func AddConn(ws *websocket.Conn) Action {
+	return func(s *Server) {
+		s.conns[ws] = struct{}{}
+		go sendUserCount(s)
+	}
+}
+
+func RemoveConn(ws *websocket.Conn) Action {
+	return func(s *Server) {
+		delete(s.conns, ws)
+		go sendUserCount(s)
+	}
+}
+
+func (s *Server) Handler(ws *websocket.Conn) {
 	s.dispatch <- AddConn(ws)
+
 	defer func() { s.dispatch <- RemoveConn(ws) }()
 
 	for {
 		var reply string
 
-		if err = websocket.Message.Receive(ws, &reply); err != nil {
+		if err := websocket.Message.Receive(ws, &reply); err != nil {
 			fmt.Println(err)
 			fmt.Println("Can't receive")
 			break
@@ -53,9 +92,10 @@ func main() {
 
 	go s.RunDispatcher()
 
-	fs := http.FileServer(http.Dir("./public"))
-	http.Handle("/", fs)
+	http.Handle("/", http.FileServer(http.Dir("./public")))
 	http.Handle("/ws", websocket.Handler(s.Handler))
-	log.Print("Starting on :3000...")
-	log.Fatal(http.ListenAndServe(":3000", nil))
+	err := http.ListenAndServe(":3000", nil);
+	if  err != nil {
+		log.Fatal(err)
+	}
 }
