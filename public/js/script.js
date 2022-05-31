@@ -2,11 +2,10 @@ let sock = null;
 
 const connected = document.getElementById("connected");
 
-if (location.protocol === 'https:') {
-    // page is secure
-}
+const userCount = document.getElementById("userCount");
 
-const wsuri =  `${location.protocol === 'https:' ? "wss" : "ws"}://${window.location.host}/ws`;
+
+const wsuri =  `${location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws`;
 
 sock = new WebSocket(wsuri);
 
@@ -21,11 +20,12 @@ sock.onclose = (e) => {
 };
 
 sock.onmessage = (e) => {
-    const msg = e.data;
-    const drawData = JSON.parse(msg)
+    const drawData = JSON.parse(e.data);
     try {
         if (drawData.type === "canvasData") {
             drawExternal(drawData.data);
+        }else if (drawData.type === "userCount"){
+            userCount.innerText = drawData.data;
         }
     } catch (error) {
         console.log("Unable to execute draw data")

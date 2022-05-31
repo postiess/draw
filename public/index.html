@@ -10,16 +10,19 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
     />
     <link rel="stylesheet" href="/css/style.css" />
-    <title>chat</title>
+    <title>Draw</title>
   </head>
   <body>
     <canvas id="canvas1"></canvas>
     <div class="controlsContainer">
-      <div class="controlsContainer__controls">
-        <div class="connected" style="font-size:small;">
+      <div class="controlsContainer__controls" style="font-size:small;">
+        <div class="connected">
           Connected <span id="connected">🔴</span>
         </div>
         <input type="color" name="" id="colourSelect" value="#000000">
+        <div>
+          Online: &nbsp; <span id="userCount"></span>
+        </div>
       </div>
     </div>
   </body>
