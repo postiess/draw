@@ -4,14 +4,6 @@
   font-family: "Open Sans", sans-serif;
 }
 
-:root {
-  --background: #28292a;
-  --white: rgb(233, 233, 233);
-  --blue: rgb(108, 170, 252);
-  --green: rgb(110, 195, 110);
-  --controlWidth: 600px;
-}
-
 #canvas1 {
   position: absolute;
   background: rgb(248, 248, 248);

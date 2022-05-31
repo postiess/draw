@@ -1,116 +1,92 @@
-let sock = null;
-
 const connected = document.getElementById("connected");
-
 const userCount = document.getElementById("userCount");
+const canvas = document.getElementById("canvas1");
+const colourSelect = document.getElementById("colourSelect");
 
+const wsuri = `${location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws`;
 
-const wsuri =  `${location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws`;
-
-sock = new WebSocket(wsuri);
+const sock = new WebSocket(wsuri);
 
 sock.onopen = () => {
     console.log("connected to " + wsuri);
     connected.innerText = "🟢";
 };
 
-sock.onclose = (e) => {
-    console.log("connection closed (" + e.code + ")");
+sock.onclose = (event) => {
+    console.log("connection closed (" + event.code + ")");
     connected.innerText = "🔴";
 };
 
-sock.onmessage = (e) => {
-    const drawData = JSON.parse(e.data);
+sock.onmessage = (event) => {
     try {
+        console.log(event.data)
+        const drawData = JSON.parse(event.data);
         if (drawData.type === "canvasData") {
-            drawExternal(drawData.data);
-        }else if (drawData.type === "userCount"){
+            draw(null, drawData.data);
+        } else if (drawData.type === "userCount") {
             userCount.innerText = drawData.data;
         }
     } catch (error) {
-        console.log("Unable to execute draw data")
+        console.log(error)
+        console.log("Unable to parse draw data");
     }
 };
 
 //canvas part
-let mouseDown = false;
 
-const canvas = document.getElementById("canvas1");
-const colourSelect = document.getElementById("colourSelect");
+const resize = () => [canvas.width, canvas.height] = [window.innerWidth, window.innerHeight];
 
-canvas.addEventListener("mousedown", () => {
-    mouseDown = true;
-});
-canvas.addEventListener("mouseup", () => {
-    mouseDown = false;
-    [old.x, old.y] = [null, null];
-});
-
-colourSelect.addEventListener("change", e => strokeColour = e.target.value);
-
-
-const strokeColourDefault = "#000000";
-let strokeColour = strokeColourDefault;
-
-const ctx = canvas.getContext("2d")
-ctx.strokeStyle = strokeColourDefault;
-
-
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+const config = {
+    mouseDown: false,
+    strokeColourDefault: "#000000",
+    old: {
+        x: null,
+        y: null,
+    },
+    strokeColour: this.strokeColourDefault
 }
 
-let old = {
-    x: null,
-    y: null,
-}
+const ctx = canvas.getContext("2d");
+ctx.strokeStyle = config.strokeColourDefault;
 
-function drawExternal(data) {
+const draw = (event, data) => {
+    const isExternal = event === null;
+
+    if (!isExternal && config.old.x === null && config.old.y === null)[config.old.x, config.old.y] = [event.clientX, event.clientY];
+
     ctx.beginPath();
-    ctx.strokeStyle = data.colour;
-    ctx.lineWidth = 0.7 * window.devicePixelRatio;
-    ctx.moveTo(data.old.x, data.old.y);
-    ctx.lineTo(data.new.x, data.new.y);
+    ctx.strokeStyle = (isExternal ? data.colour : config.strokeColour);
+    ctx.moveTo((isExternal ? data.old.x : config.old.x), (isExternal ? data.old.y : config.old.y));
+    ctx.lineTo((isExternal ? data.new.x : event.clientX), (isExternal ? data.new.y : event.clientY));
     ctx.stroke();
     ctx.closePath();
-}
 
-function draw(event) {
-    if (old.x === null && old.y === null) {
-        old.x = event.clientX
-        old.y = event.clientY
-    }
-    ctx.beginPath();
-    ctx.strokeStyle = strokeColour;
-    ctx.lineWidth = 0.7 * window.devicePixelRatio;
-    ctx.moveTo(old.x, old.y);
-    ctx.lineTo(event.clientX, event.clientY);
-    ctx.stroke();
-    ctx.closePath();
-    const drawingData = {
-        type: "canvasData",
-        data: {
-            old,
-            new: {
-                x: event.clientX,
-                y: event.clientY
-            },
-            colour: strokeColour
+    if (!isExternal) {
+        const drawingData = {
+            type: "canvasData",
+            data: {
+                old: config.old,
+                new: {
+                    x: event.clientX,
+                    y: event.clientY
+                },
+                colour: config.strokeColour
+            }
         }
+        sock.send(JSON.stringify(drawingData));
+        [config.old.x, config.old.y] = [event.clientX, event.clientY];
     }
-    sock.send(JSON.stringify(drawingData));
-    old.x = event.clientX
-    old.y = event.clientY
 }
+
 resize();
 
-window.addEventListener("resize", () => {
-    resize();
+window.addEventListener("resize", resize);
+
+canvas.addEventListener("mousemove", (event) => config.mouseDown ? draw(event, null) : false);
+canvas.addEventListener("mousedown", () => config.mouseDown = true);
+canvas.addEventListener("mouseup", () => {
+    config.mouseDown = false;
+    [config.old.x, config.old.y] = [null, null];
 });
 
-canvas.addEventListener("mousemove", (event) => {
-    if(mouseDown){
-        draw(event);
-    }
-});
+colourSelect.addEventListener("change", (event) => config.strokeColour = event.target.value);
