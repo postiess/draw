@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type Action func(s *Server)
@@ -17,12 +17,7 @@ type Server struct {
 	dispatch chan Action
 }
 
-type Message struct {
-	Type string      `json:"type"`
-	Data interface{} `json:"data"`
-}
-
-func Broadcast(message string) Action {
+func broadcast(message string) Action {
 	return func(s *Server) {
 		for ws := range s.conns {
 			if err := websocket.Message.Send(ws, message); err != nil {
@@ -33,36 +28,28 @@ func Broadcast(message string) Action {
 }
 
 func sendUserCount(s *Server) {
-	userMessage := &Message{
-		Type: "userCount",
-		Data: len(s.conns),
-	}
-	b, err := json.Marshal(userMessage)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	s.dispatch <- Broadcast(string(b))
+	userCountMessage := `{"type" : "userCount", "data" : ` + strconv.Itoa(len(s.conns)) + `}`
+	s.dispatch <- broadcast(string(userCountMessage))
 }
 
-func AddConn(ws *websocket.Conn) Action {
+func addConn(ws *websocket.Conn) Action {
 	return func(s *Server) {
 		s.conns[ws] = struct{}{}
 		go sendUserCount(s)
 	}
 }
 
-func RemoveConn(ws *websocket.Conn) Action {
+func removeConn(ws *websocket.Conn) Action {
 	return func(s *Server) {
 		delete(s.conns, ws)
 		go sendUserCount(s)
 	}
 }
 
-func (s *Server) Handler(ws *websocket.Conn) {
-	s.dispatch <- AddConn(ws)
+func (s *Server) handler(ws *websocket.Conn) {
+	s.dispatch <- addConn(ws)
 
-	defer func() { s.dispatch <- RemoveConn(ws) }()
+	defer func() { s.dispatch <- removeConn(ws) }()
 
 	for {
 		var reply string
@@ -73,11 +60,11 @@ func (s *Server) Handler(ws *websocket.Conn) {
 			break
 		}
 		fmt.Println(reply)
-		s.dispatch <- Broadcast(reply)
+		s.dispatch <- broadcast(reply)
 	}
 }
 
-func (s *Server) RunDispatcher() {
+func (s *Server) runDispatcher() {
 	for {
 		action := <-s.dispatch
 		action(s)
@@ -90,12 +77,11 @@ func main() {
 		dispatch: make(chan Action),
 	}
 
-	go s.RunDispatcher()
+	go s.runDispatcher()
 
 	http.Handle("/", http.FileServer(http.Dir("./public")))
-	http.Handle("/ws", websocket.Handler(s.Handler))
-	err := http.ListenAndServe(":3000", nil);
-	if  err != nil {
+	http.Handle("/ws", websocket.Handler(s.handler))
+	if err := http.ListenAndServe(":3000", nil); err != nil {
 		log.Fatal(err)
 	}
 }
