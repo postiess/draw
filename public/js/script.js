@@ -81,12 +81,10 @@ const draw = (event, data) => {
 resize();
 
 window.addEventListener("resize", resize);
-
 canvas.addEventListener("mousemove", (event) => config.mouseDown ? draw(event, null) : false);
 canvas.addEventListener("mousedown", () => config.mouseDown = true);
 canvas.addEventListener("mouseup", () => {
     config.mouseDown = false;
     [config.old.x, config.old.y] = [null, null];
 });
-
 colourSelect.addEventListener("change", (event) => config.strokeColour = event.target.value);
