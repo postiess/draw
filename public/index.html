@@ -13,9 +13,14 @@
     <title>chat</title>
   </head>
   <body>
-    <input type="color" class="js-color-picker color-picker" />
-    <input type="range" class="js-line-range" min="1" max="72" value="1" />
-    <label class="js-range-value">1</label>Px
-    <canvas class="js-paint paint-canvas" width="600px" height="300px"></canvas>
+    <canvas id="canvas1"></canvas>
+    <div class="controlsContainer">
+      <div class="controlsContainer__controls">
+        <div class="connected" style="font-size:small;">
+          Connected <span id="connected">🔴</span>
+        </div>
+        <input type="color" name="" id="colourSelect" value="#000000">
+      </div>
+    </div>
   </body>
 </html>

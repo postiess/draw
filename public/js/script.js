@@ -1,83 +1,112 @@
 let sock = null;
-let recentMessage = "";
 
-let isDrawing = false;
+const connected = document.getElementById("connected");
 
 const wsuri = `ws://${window.location.host}/ws`;
-
-let dpr = window.devicePixelRatio;
-
-const c = document.querySelector("canvas");
-c.width = window.innerWidth * window.devicePixelRatio;
-c.height = window.innerHeight * window.devicePixelRatio;
-c.style.width = window.innerWidth + 'px';
-c.style.height = window.innerHeight + 'px';
-
-let ctx = c.getContext("2d");
-ctx.lineWidth = 0.7 * dpr;
-ctx.strokeStyle = "#000000";
-ctx.lineJoin = 'round';
-ctx.lineCap = 'round';
 
 sock = new WebSocket(wsuri);
 
 sock.onopen = () => {
     console.log("connected to " + wsuri);
+    connected.innerText = "🟢";
 };
 
 sock.onclose = (e) => {
     console.log("connection closed (" + e.code + ")");
+    connected.innerText = "🔴";
 };
 
 sock.onmessage = (e) => {
     const msg = e.data;
-    console.log(`received: ${msg}`)
+    const drawData = JSON.parse(msg)
+    try {
+        if (drawData.type === "canvasData") {
+            drawExternal(drawData.data);
+        }
+    } catch (error) {
+        console.log("Unable to execute draw data")
+    }
 };
 
 //canvas part
+let mouseDown = false;
 
-const paintCanvas = document.querySelector( '.js-paint' );
-const context = paintCanvas.getContext( '2d' );
-context.lineCap = 'round';
+const canvas = document.getElementById("canvas1");
+const colourSelect = document.getElementById("colourSelect");
 
-const colorPicker = document.querySelector( '.js-color-picker');
+canvas.addEventListener("mousedown", () => {
+    mouseDown = true;
+});
+canvas.addEventListener("mouseup", () => {
+    mouseDown = false;
+    [old.x, old.y] = [null, null];
+});
 
-colorPicker.addEventListener( 'change', event => {
-    context.strokeStyle = event.target.value;
-} );
+colourSelect.addEventListener("change", e => strokeColour = e.target.value);
 
-const lineWidthRange = document.querySelector( '.js-line-range' );
-const lineWidthLabel = document.querySelector( '.js-range-value' );
 
-lineWidthRange.addEventListener( 'input', event => {
-    const width = event.target.value;
-    lineWidthLabel.innerHTML = width;
-    context.lineWidth = width;
-} );
+const strokeColourDefault = "#000000";
+let strokeColour = strokeColourDefault;
 
-let x = 0, y = 0;
-let isMouseDown = false;
+const ctx = canvas.getContext("2d")
+ctx.strokeStyle = strokeColourDefault;
 
-const stopDrawing = () => { isMouseDown = false; }
-const startDrawing = event => {
-    isMouseDown = true;
-   [x, y] = [event.offsetX, event.offsetY];
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
-const drawLine = event => {
-    if ( isMouseDown ) {
-        const newX = event.offsetX;
-        const newY = event.offsetY;
-        context.beginPath();
-        context.moveTo( x, y );
-        context.lineTo( newX, newY );
-        context.stroke();
-        //[x, y] = [newX, newY];
-        x = newX;
-        y = newY;
+
+let old = {
+    x: null,
+    y: null,
+}
+
+function drawExternal(data) {
+    ctx.beginPath();
+    ctx.strokeStyle = data.colour;
+    ctx.lineWidth = 0.7 * window.devicePixelRatio;
+    ctx.moveTo(data.old.x, data.old.y);
+    ctx.lineTo(data.new.x, data.new.y);
+    ctx.stroke();
+    ctx.closePath();
+}
+
+function draw(event) {
+    if (old.x === null && old.y === null) {
+        old.x = event.clientX
+        old.y = event.clientY
     }
+    ctx.beginPath();
+    ctx.strokeStyle = strokeColour;
+    ctx.lineWidth = 0.7 * window.devicePixelRatio;
+    ctx.moveTo(old.x, old.y);
+    ctx.lineTo(event.clientX, event.clientY);
+    ctx.stroke();
+    ctx.closePath();
+    const drawingData = {
+        type: "canvasData",
+        data: {
+            old,
+            new: {
+                x: event.clientX,
+                y: event.clientY
+            },
+            colour: strokeColour
+        }
+    }
+    sock.send(JSON.stringify(drawingData));
+    old.x = event.clientX
+    old.y = event.clientY
 }
+resize();
 
-paintCanvas.addEventListener( 'mousedown', startDrawing );
-paintCanvas.addEventListener( 'mousemove', drawLine );
-paintCanvas.addEventListener( 'mouseup', stopDrawing );
-paintCanvas.addEventListener( 'mouseout', stopDrawing );
+window.addEventListener("resize", () => {
+    resize();
+});
+
+canvas.addEventListener("mousemove", (event) => {
+    if(mouseDown){
+        draw(event);
+    }
+});

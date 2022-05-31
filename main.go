@@ -14,6 +14,11 @@ type Server struct {
 	dispatch chan Action
 }
 
+type Message struct {
+	Type string `json:"type"`
+	Data interface{} `json:"data"`
+}
+
 func (s *Server) Handler(ws *websocket.Conn) {
 
 	var err error
@@ -24,9 +29,11 @@ func (s *Server) Handler(ws *websocket.Conn) {
 		var reply string
 
 		if err = websocket.Message.Receive(ws, &reply); err != nil {
+			fmt.Println(err)
 			fmt.Println("Can't receive")
 			break
 		}
+		fmt.Println(reply)
 		s.dispatch <- Broadcast(reply)
 	}
 }

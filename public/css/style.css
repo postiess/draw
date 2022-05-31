@@ -1,27 +1,51 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap');
 
 * {
-    font-family: "Open Sans", sans-serif;
+  font-family: "Open Sans", sans-serif;
 }
 
 :root {
-    --background: #28292a;
-    --white: rgb(233, 233, 233);
-    --blue: rgb(108, 170, 252);
-    --green: rgb(110, 195, 110);
+  --background: #28292a;
+  --white: rgb(233, 233, 233);
+  --blue: rgb(108, 170, 252);
+  --green: rgb(110, 195, 110);
+  --controlWidth: 600px;
 }
 
+#canvas1 {
+  position: absolute;
+  background: rgb(248, 248, 248);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 99;
+  cursor: crosshair;
+}
 
+.controlsContainer {
+  position: fixed;
+  z-index: 99999999;
+  bottom: 2rem;
+  left: 0rem;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
 
-.paint-canvas {
-    border: 1px black solid;
-    display: block;
-    margin: 1rem;
-    cursor: crosshair;
-    max-width: 600px;
-    max-height: 300px;
-  }
-
-  .color-picker {
-    margin: 1rem 1rem 0 1rem;
-  }
+.controlsContainer .controlsContainer__controls {
+  background-color: rgb(230, 230, 230);
+  border-radius: 2.5rem;
+  min-width: 30rem;
+  width: auto;
+  height: 3rem;
+  display: flex;
+  flex-flow: row;
+  gap: 1rem;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 2rem;
+  padding-right: 1rem;
+}
