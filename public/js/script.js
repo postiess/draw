@@ -2,7 +2,11 @@ let sock = null;
 
 const connected = document.getElementById("connected");
 
-const wsuri = `ws://${window.location.host}/ws`;
+if (location.protocol === 'https:') {
+    // page is secure
+}
+
+const wsuri =  `${location.protocol === 'https:' ? "wss" : "ws"}://${window.location.host}/ws`;
 
 sock = new WebSocket(wsuri);
 
