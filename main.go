@@ -28,8 +28,7 @@ func broadcast(message string) Action {
 }
 
 func sendUserCount(s *Server) {
-	userCountMessage := `{"type" : "userCount", "data" : ` + strconv.Itoa(len(s.conns)) + `}`
-	s.dispatch <- broadcast(string(userCountMessage))
+	s.dispatch <- broadcast(`{"type" : "userCount", "data" : ` + strconv.Itoa(len(s.conns)) + `}`)
 }
 
 func addConn(ws *websocket.Conn) Action {
@@ -55,8 +54,7 @@ func (s *Server) handler(ws *websocket.Conn) {
 		var reply string
 
 		if err := websocket.Message.Receive(ws, &reply); err != nil {
-			fmt.Println(err)
-			fmt.Println("Can't receive")
+			fmt.Println(err, "Can't receive message")
 			break
 		}
 		fmt.Println(reply)

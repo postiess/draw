@@ -4,7 +4,6 @@ const canvas = document.getElementById("canvas1");
 const colourSelect = document.getElementById("colourSelect");
 
 const wsuri = `${location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws`;
-
 const sock = new WebSocket(wsuri);
 
 sock.onopen = () => {
@@ -50,7 +49,7 @@ const ctx = canvas.getContext("2d");
 ctx.strokeStyle = config.strokeColourDefault;
 
 const draw = (event, data) => {
-    const isExternal = event === null;
+    const isExternal = event === null; //not local drawing data
 
     if (!isExternal && config.old.x === null && config.old.y === null)[config.old.x, config.old.y] = [event.clientX, event.clientY];
 
