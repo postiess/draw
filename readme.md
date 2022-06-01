@@ -12,6 +12,7 @@ I wanted to see how much better performance I could get rewriting the server in 
 ## How to run
 
 ```
+go mod download
 go run .
 ```
 
