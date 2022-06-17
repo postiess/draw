@@ -15,15 +15,13 @@
   </head>
   <body>
     <canvas id="canvas1"></canvas>
-    <div class="controlsContainer">
-      <div class="controlsContainer__controls" style="font-size:small; user-select: none;">
-        <div class="connected">
-          Connected <span id="connected">🔴</span>
-        </div>
-        <input type="color" name="" id="colourSelect" value="#000000">
-        <div>
-          📶 &nbsp; <span id="userCount"></span>
-        </div>
+    <div class="controls">
+      <div class="connected">
+        Connected <span id="connected">🔴</span>
+      </div>
+      <input type="color" id="colourSelect" value="#000000" aria-label="colour selector">
+      <div>
+        📶 &nbsp; <span id="userCount" aria-label="number of users"></span>
       </div>
     </div>
   </body>

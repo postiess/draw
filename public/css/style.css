@@ -4,6 +4,12 @@
   font-family: "Open Sans", sans-serif;
 }
 
+body {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+}
+
 #canvas1 {
   position: absolute;
   background: rgb(248, 248, 248);
@@ -15,22 +21,17 @@
   cursor: crosshair;
 }
 
-.controlsContainer {
+.controls {
+  user-select: none;
+  font-size: 14px;
   position: fixed;
   z-index: 99999999;
   bottom: 2rem;
-  left: 0rem;
-  display: flex;
-  flex-flow: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
-.controlsContainer .controlsContainer__controls {
+  left: 50%;
+  transform: translateX(-50%);
   background-color: rgb(230, 230, 230);
   border-radius: 2.5rem;
-  min-width: 30rem;
+  min-width: 20rem;
   width: auto;
   height: 3rem;
   display: flex;
