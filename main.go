@@ -21,7 +21,7 @@ func broadcast(message string) Action {
 	return func(s *Server) {
 		for ws := range s.conns {
 			if err := websocket.Message.Send(ws, message); err != nil {
-				fmt.Println("Can't send message")
+				fmt.Println(err, "Can't send message")
 			}
 		}
 	}
